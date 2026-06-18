@@ -30,8 +30,8 @@ failures, NEVER list).
 
 - [ ] Node ≥20 + npm in the run environment. **(Currently NOT installed on this
       machine — blocks the run until resolved.)**
-- [ ] `git init` done and a working branch checked out (e.g.
-      `auto/overnight-2026-06-18`). Repo is currently not git-initialized.
+- [x] `git init` done; baseline committed on `main`; working branch
+      `auto/overnight-2026-06-18` checked out. ✓ (2026-06-18)
 - [ ] Approve the in-scope tasks (check the boxes in the table below).
 
 ---
