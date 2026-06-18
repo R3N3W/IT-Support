@@ -1,7 +1,8 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { requireUser, type TenantContext } from "@/lib/auth/session";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/database";
+import { requireUser } from "@/lib/auth/session";
+
+/** The exact RLS-bound server client type, inferred from the factory. */
+type ServerClient = Awaited<ReturnType<typeof createSupabaseServerClient>>;
 
 /**
  * Tables that carry a tenant_id and must always be tenant-scoped. As new
@@ -20,28 +21,22 @@ type TenantScopedTable = "users";
  * Raw service-role access (which bypasses RLS) is reserved for provisioning and
  * background jobs and must never be used here.
  */
-export interface TenantDb {
-  ctx: TenantContext;
-  /** Escape hatch to the underlying RLS-constrained client. Use sparingly. */
-  raw: SupabaseClient<Database>;
-  /** SELECT * pre-filtered by the caller's tenant_id. Chain further filters. */
-  select(table: TenantScopedTable): ReturnType<
-    ReturnType<SupabaseClient<Database>["from"]>["select"]
-  >;
-}
-
-export async function getTenantDb(): Promise<TenantDb> {
+export async function getTenantDb() {
   const ctx = await requireUser();
-  const raw = await createSupabaseServerClient();
+  const raw: ServerClient = await createSupabaseServerClient();
 
   return {
     ctx,
+    /** Escape hatch to the underlying RLS-constrained client. Use sparingly. */
     raw,
-    select(table) {
+    /** SELECT * pre-filtered by the caller's tenant_id. Chain further filters. */
+    select(table: TenantScopedTable) {
       return raw.from(table).select("*").eq("tenant_id", ctx.tenantId);
     },
   };
 }
+
+export type TenantDb = Awaited<ReturnType<typeof getTenantDb>>;
 
 /**
  * Convenience wrapper: resolves the tenant DAL and hands it to `fn`. Keeps call
