@@ -28,8 +28,10 @@ failures, NEVER list).
 
 ## Prerequisites (human-confirmed, one-time, before launch)
 
-- [ ] Node ≥20 + npm in the run environment. **(Currently NOT installed on this
-      machine — blocks the run until resolved.)**
+- [x] Node ≥20 + npm in the run environment. ✓ node v24.17.0 / npm 11.13.0 at
+      `C:\Program Files\nodejs` (not on PATH — prepend it in the run shell).
+- [ ] `npm install` has been run (installs typescript/vitest/eslint so the
+      typecheck/lint/test gate is real). node_modules not yet installed.
 - [x] `git init` done; baseline committed on `main`; working branch
       `auto/overnight-2026-06-18` checked out. ✓ (2026-06-18)
 - [ ] Approve the in-scope tasks (check the boxes in the table below).
