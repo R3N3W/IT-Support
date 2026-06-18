@@ -30,8 +30,10 @@ failures, NEVER list).
 
 - [x] Node ≥20 + npm in the run environment. ✓ node v24.17.0 / npm 11.13.0 at
       `C:\Program Files\nodejs` (not on PATH — prepend it in the run shell).
-- [ ] `npm install` has been run (installs typescript/vitest/eslint so the
-      typecheck/lint/test gate is real). node_modules not yet installed.
+- [x] `npm install` done (80 pkgs). `typecheck` + `test` verified green on the
+      Phase 1 code. ✓ (2026-06-18)
+      NOTE: `npm run lint` (`next lint`) is not functional until **T01** adds the
+      ESLint config — run T01 first, or the lint gate will fail.
 - [x] `git init` done; baseline committed on `main`; working branch
       `auto/overnight-2026-06-18` checked out. ✓ (2026-06-18)
 - [ ] Approve the in-scope tasks (check the boxes in the table below).
