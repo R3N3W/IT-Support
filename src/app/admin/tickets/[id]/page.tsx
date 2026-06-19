@@ -42,6 +42,7 @@ export default async function AdminTicketPage({
           <form action={setStatusAction} className="row">
             <input type="hidden" name="ticketId" value={ticket.id} />
             <select
+              key={ticket.status}
               className="select"
               name="status"
               defaultValue={ticket.status}
@@ -61,6 +62,7 @@ export default async function AdminTicketPage({
           <form action={assignAction} className="row">
             <input type="hidden" name="ticketId" value={ticket.id} />
             <select
+              key={ticket.assignee_id ?? "none"}
               className="select"
               name="assigneeId"
               defaultValue={ticket.assignee_id ?? ""}
