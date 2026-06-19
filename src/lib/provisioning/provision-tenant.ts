@@ -113,5 +113,19 @@ export async function createTenantUser(
     throw new Error(`Failed to create tenant user: ${error?.message}`);
   }
 
+  // Don't rely on the handle_new_user trigger: the admin API sets app_metadata
+  // after the initial auth.users insert, so the AFTER INSERT trigger may not see
+  // the tenant binding. Write the profile row explicitly (idempotent).
+  const { error: profileError } = await admin.from("users").upsert({
+    id: created.user.id,
+    tenant_id: input.tenantId,
+    role: input.role,
+    email: input.email,
+    display_name: input.displayName ?? null,
+  });
+  if (profileError) {
+    throw new Error(`Failed to write user profile: ${profileError.message}`);
+  }
+
   return { userId: created.user.id };
 }
