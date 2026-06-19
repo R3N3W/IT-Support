@@ -50,6 +50,7 @@ describe.runIf(hasServiceKey)("ticket cross-tenant + role isolation", () => {
   let tenantA = "";
   let tenantB = "";
   const ids: string[] = [];
+  let agentAId = "";
   let userA1Id = "";
   let ticketId = "";
 
@@ -78,6 +79,7 @@ describe.runIf(hasServiceKey)("ticket cross-tenant + role isolation", () => {
       password: agentA.password,
       role: "agent",
     });
+    agentAId = ag.userId;
     ids.push(ag.userId);
 
     const u1 = await createTenantUser({
@@ -178,6 +180,23 @@ describe.runIf(hasServiceKey)("ticket cross-tenant + role isolation", () => {
       .eq("id", ticketId)
       .single();
     expect(data?.status).toBe("resolved");
+  });
+
+  it("an agent cannot rewrite a ticket's requester (immutable column)", async () => {
+    const ag = await signIn(agentA.email, agentA.password);
+    const { error } = await ag
+      .from("tickets")
+      .update({ requester_id: agentAId })
+      .eq("id", ticketId);
+    expect(error).not.toBeNull();
+
+    const admin = createSupabaseAdminClient();
+    const { data } = await admin
+      .from("tickets")
+      .select("requester_id")
+      .eq("id", ticketId)
+      .single();
+    expect(data?.requester_id).toBe(userA1Id);
   });
 
   it("a non-requester cannot post a message on the ticket", async () => {
