@@ -71,6 +71,15 @@ Goal: per-tenant KB content ready for retrieval.
 
 Exit: publish an article; chunks + embeddings appear, tenant-scoped.
 
+**Status (2026-06-19): DATA LAYER COMPLETE & VERIFIED.** kb_articles, kb_chunks
+(pgvector/hnsw), jobs — force RLS + least-privilege grants + composite FK
+(chunk↔article same-tenant); embeddings behind a provider interface (Voyage when
+`VOYAGE_API_KEY` is set, deterministic stub otherwise); chunk→embed→upsert
+ingestion with `content_hash` dedupe; jobs enqueue + `processDueJobs` worker; KB
+service (CRUD/publish/archive, agents+). Security-reviewed (approved) and all
+KB isolation + ingestion tests pass live. Remaining: admin KB UI and the Vercel
+Cron HTTP route for the worker.
+
 ---
 
 ## Phase 4 — AI support agent (RAG + escalation) 🔒
@@ -78,6 +87,11 @@ Exit: publish an article; chunks + embeddings appear, tenant-scoped.
 Goal: the core differentiator.
 
 - RAG retrieval (tenant-scoped, top-k, similarity floor).
+  - 🔒 The end-user retrieval path will be a `security definer` RPC; it MUST
+    hard-filter `tenant_id = app.current_tenant_id()`, restrict end-users to
+    `status = 'published'` articles, and pin `set search_path = ''`. The hnsw
+    index is not tenant-partitioned, so every similarity query must carry an
+    explicit `tenant_id` predicate. Route this RPC to `security-reviewer`.
 - Prompt composition: platform base + tenant `system_prompt` overlay.
 - Claude generation with ground-only + citation instructions.
 - Confidence/escalation gate → create `escalation` + ticket; notify agents.

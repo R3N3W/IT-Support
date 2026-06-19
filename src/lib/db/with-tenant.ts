@@ -8,7 +8,13 @@ import type { Database } from "@/types/database";
  * tenant-owned tables are added in later phases (kb_articles, ...), extend this
  * union so the DAL keeps enforcing the filter at the type level.
  */
-type TenantScopedTable = "users" | "tickets" | "ticket_messages";
+type TenantScopedTable =
+  | "users"
+  | "tickets"
+  | "ticket_messages"
+  | "kb_articles"
+  | "kb_chunks"
+  | "jobs";
 
 /**
  * The sanctioned tenant-scoped data-access layer. Every read/write of tenant
