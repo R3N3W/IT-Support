@@ -38,8 +38,9 @@ coverage/
 .DS_Store
 Thumbs.db
 
-# TypeScript
+# TypeScript / Next.js generated
 *.tsbuildinfo
+next-env.d.ts
 
 # Vercel
 .vercel/
