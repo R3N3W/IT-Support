@@ -1,15 +1,14 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth/session";
-
-/** The exact RLS-bound server client type, inferred from the factory. */
-type ServerClient = Awaited<ReturnType<typeof createSupabaseServerClient>>;
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
 
 /**
  * Tables that carry a tenant_id and must always be tenant-scoped. As new
- * tenant-owned tables are added in later phases (tickets, kb_articles, ...),
- * extend this union so the DAL keeps enforcing the filter at the type level.
+ * tenant-owned tables are added in later phases (kb_articles, ...), extend this
+ * union so the DAL keeps enforcing the filter at the type level.
  */
-type TenantScopedTable = "users";
+type TenantScopedTable = "users" | "tickets" | "ticket_messages";
 
 /**
  * The sanctioned tenant-scoped data-access layer. Every read/write of tenant
@@ -23,13 +22,18 @@ type TenantScopedTable = "users";
  */
 export async function getTenantDb() {
   const ctx = await requireUser();
-  const raw: ServerClient = await createSupabaseServerClient();
+  // @supabase/ssr bundles its own (older) supabase-js types whose Insert/Update
+  // payloads resolve to `never`. Cast to the installed supabase-js client type
+  // so writes are correctly typed; the runtime object is unchanged.
+  const raw = (await createSupabaseServerClient()) as unknown as SupabaseClient<Database>;
 
   return {
     ctx,
     /** Escape hatch to the underlying RLS-constrained client. Use sparingly. */
     raw,
-    /** SELECT * pre-filtered by the caller's tenant_id. Chain further filters. */
+    /** SELECT * pre-filtered by the caller's tenant_id, for simple same-tenant
+     *  reads. For table-specific column filters/ordering, use `raw` directly
+     *  with an explicit `.eq("tenant_id", ctx.tenantId)`. */
     select(table: TenantScopedTable) {
       return raw.from(table).select("*").eq("tenant_id", ctx.tenantId);
     },
