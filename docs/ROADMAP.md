@@ -50,6 +50,14 @@ Goal: end-to-end human ticketing without AI yet.
 
 Exit: an end-user opens a ticket; an agent in the same tenant resolves it.
 
+**Status (2026-06-19): COMPLETE.** Data layer (tables, role-aware RLS, composite
+FKs, immutable-column trigger, DAL + service, isolation suite) shipped and
+security-reviewed; UI vertical (login, admin dashboard, end-user portal) shipped
+and build-verified; runtime auth-gating smoke passed. Outstanding: full
+logged-in browser smoke (login → create → resolve) requires
+`SUPABASE_SERVICE_ROLE_KEY` in `.env.local` to provision login-capable users.
+Email-in deferred to a later phase.
+
 ---
 
 ## Phase 3 — Knowledge base + ingestion 🔒
