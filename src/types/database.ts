@@ -209,7 +209,34 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_ticket_with_message: {
+        Args: {
+          p_body: string
+          p_channel?: Database["public"]["Enums"]["ticket_channel"]
+          p_priority?: Database["public"]["Enums"]["ticket_priority"]
+          p_subject: string
+        }
+        Returns: {
+          ai_handled: boolean
+          assignee_id: string | null
+          channel: Database["public"]["Enums"]["ticket_channel"]
+          created_at: string
+          escalated: boolean
+          id: string
+          priority: Database["public"]["Enums"]["ticket_priority"]
+          requester_id: string
+          status: Database["public"]["Enums"]["ticket_status"]
+          subject: string
+          tenant_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "tickets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       message_author_type: "end_user" | "agent" | "ai" | "system"

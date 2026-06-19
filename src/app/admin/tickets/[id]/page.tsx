@@ -3,12 +3,9 @@ import { notFound, redirect } from "next/navigation";
 import { getTenantContext, hasAtLeastRole } from "@/lib/auth/session";
 import { getTicketWithMessages } from "@/lib/tickets/service";
 import { listAssignableAgents } from "@/lib/users/service";
-import {
-  setStatusAction,
-  assignAction,
-  addMessageAction,
-} from "@/lib/tickets/actions";
+import { setStatusAction, assignAction } from "@/lib/tickets/actions";
 import { TICKET_STATUSES } from "@/lib/tickets/schemas";
+import { ReplyForm } from "@/components/reply-form";
 import { TopBar } from "@/components/top-bar";
 
 export default async function AdminTicketPage({
@@ -95,15 +92,7 @@ export default async function AdminTicketPage({
           ))}
         </section>
 
-        <form action={addMessageAction} className="stack">
-          <input type="hidden" name="ticketId" value={ticket.id} />
-          <input type="hidden" name="basePath" value="/admin" />
-          <label htmlFor="body">Reply</label>
-          <textarea id="body" name="body" className="textarea" required />
-          <button className="btn" type="submit">
-            Send reply
-          </button>
-        </form>
+        <ReplyForm ticketId={ticket.id} basePath="/admin" />
       </main>
     </>
   );

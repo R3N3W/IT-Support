@@ -152,17 +152,42 @@ describe.runIf(hasServiceKey)("ticket cross-tenant + role isolation", () => {
     expect(data ?? []).toHaveLength(0);
   });
 
-  it("an end-user cannot change ticket status", async () => {
+  it("a requester can close/reopen their own ticket, but not set agent statuses or other fields", async () => {
     const a1 = await signIn(userA1.email, userA1.password);
-    await a1.from("tickets").update({ status: "closed" }).eq("id", ticketId);
-
     const admin = createSupabaseAdminClient();
-    const { data } = await admin
+
+    // Requester can close their own ticket.
+    await a1.from("tickets").update({ status: "closed" }).eq("id", ticketId);
+    let snap = await admin
       .from("tickets")
-      .select("status")
+      .select("status, priority")
       .eq("id", ticketId)
       .single();
-    expect(data?.status).not.toBe("closed");
+    expect(snap.data?.status).toBe("closed");
+
+    // Requester cannot set an agent-only status (trigger rejects).
+    const resStatus = await a1
+      .from("tickets")
+      .update({ status: "resolved" })
+      .eq("id", ticketId);
+    expect(resStatus.error).not.toBeNull();
+
+    // Requester cannot change other columns (trigger rejects).
+    const resPriority = await a1
+      .from("tickets")
+      .update({ priority: "low" })
+      .eq("id", ticketId);
+    expect(resPriority.error).not.toBeNull();
+
+    // Reopen, and confirm nothing else changed.
+    await a1.from("tickets").update({ status: "open" }).eq("id", ticketId);
+    snap = await admin
+      .from("tickets")
+      .select("status, priority")
+      .eq("id", ticketId)
+      .single();
+    expect(snap.data?.status).toBe("open");
+    expect(snap.data?.priority).toBe("normal");
   });
 
   it("an agent can change ticket status", async () => {

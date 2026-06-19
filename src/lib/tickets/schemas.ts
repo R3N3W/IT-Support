@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+/** Result shape returned by form server actions for inline error display. */
+export type ActionState = { error: string | null };
+
 export const TICKET_PRIORITIES = ["low", "normal", "high", "urgent"] as const;
 export const TICKET_CHANNELS = ["widget", "email", "portal"] as const;
 export const TICKET_STATUSES = [
@@ -28,6 +31,13 @@ export const setTicketStatusSchema = z.object({
   status: z.enum(TICKET_STATUSES),
 });
 export type SetTicketStatusInput = z.infer<typeof setTicketStatusSchema>;
+
+// A requester may only reopen (open) or close their own ticket.
+export const requesterSetStatusSchema = z.object({
+  ticketId: z.string().uuid(),
+  status: z.enum(["open", "closed"]),
+});
+export type RequesterSetStatusInput = z.infer<typeof requesterSetStatusSchema>;
 
 export const assignTicketSchema = z.object({
   ticketId: z.string().uuid(),

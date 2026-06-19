@@ -2,43 +2,105 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { TicketPriority, TicketStatus } from "@/types/database";
+import { z } from "zod";
 import {
   createTicket,
   addMessage,
   setTicketStatus,
+  requesterSetTicketStatus,
   assignTicket,
 } from "./service";
-import { TICKET_PRIORITIES } from "./schemas";
+import {
+  createTicketSchema,
+  addMessageSchema,
+  requesterSetStatusSchema,
+  setTicketStatusSchema,
+  assignTicketSchema,
+  type ActionState,
+} from "./schemas";
+
+function firstError(err: z.ZodError): string {
+  return err.issues[0]?.message ?? "Invalid input";
+}
+
+function messageOf(err: unknown): string {
+  return err instanceof Error ? err.message : "Something went wrong";
+}
 
 /** End-user (or agent) files a new ticket, then lands on its detail page. */
-export async function createTicketAction(formData: FormData) {
-  const subject = String(formData.get("subject") ?? "");
-  const body = String(formData.get("body") ?? "");
-  const priorityRaw = String(formData.get("priority") ?? "");
-  const priority = (TICKET_PRIORITIES as readonly string[]).includes(priorityRaw)
-    ? (priorityRaw as TicketPriority)
-    : undefined;
+export async function createTicketAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const priorityRaw = formData.get("priority");
+  const parsed = createTicketSchema.safeParse({
+    subject: formData.get("subject"),
+    body: formData.get("body"),
+    priority: priorityRaw ? priorityRaw : undefined,
+  });
+  if (!parsed.success) return { error: firstError(parsed.error) };
 
-  const ticket = await createTicket({ subject, body, priority });
+  let ticketId: string;
+  try {
+    const ticket = await createTicket(parsed.data);
+    ticketId = ticket.id;
+  } catch (err) {
+    return { error: messageOf(err) };
+  }
+
   revalidatePath("/portal");
-  redirect(`/portal/tickets/${ticket.id}`);
+  redirect(`/portal/tickets/${ticketId}`); // outside try: redirect() throws by design
 }
 
 /** Post a reply on a ticket. basePath is "/admin" or "/portal". */
-export async function addMessageAction(formData: FormData) {
-  const ticketId = String(formData.get("ticketId") ?? "");
-  const body = String(formData.get("body") ?? "");
-  const basePath = String(formData.get("basePath") ?? "/portal");
+export async function addMessageAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const parsed = addMessageSchema.safeParse({
+    ticketId: formData.get("ticketId"),
+    body: formData.get("body"),
+  });
+  if (!parsed.success) return { error: firstError(parsed.error) };
 
-  await addMessage({ ticketId, body });
-  revalidatePath(`${basePath}/tickets/${ticketId}`);
+  const basePath = String(formData.get("basePath") ?? "/portal");
+  try {
+    await addMessage(parsed.data);
+  } catch (err) {
+    return { error: messageOf(err) };
+  }
+
+  revalidatePath(`${basePath}/tickets/${parsed.data.ticketId}`);
+  return { error: null };
+}
+
+/** Requester reopens/closes their own ticket. */
+export async function requesterSetStatusAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const parsed = requesterSetStatusSchema.safeParse({
+    ticketId: formData.get("ticketId"),
+    status: formData.get("status"),
+  });
+  if (!parsed.success) return { error: firstError(parsed.error) };
+
+  try {
+    await requesterSetTicketStatus(parsed.data);
+  } catch (err) {
+    return { error: messageOf(err) };
+  }
+
+  revalidatePath(`/portal/tickets/${parsed.data.ticketId}`);
+  return { error: null };
 }
 
 /** Change a ticket's status (agents+; also enforced by RLS). */
 export async function setStatusAction(formData: FormData) {
-  const ticketId = String(formData.get("ticketId") ?? "");
-  const status = String(formData.get("status") ?? "") as TicketStatus;
+  const { ticketId, status } = setTicketStatusSchema.parse({
+    ticketId: formData.get("ticketId"),
+    status: formData.get("status"),
+  });
 
   await setTicketStatus({ ticketId, status });
   revalidatePath(`/admin/tickets/${ticketId}`);
@@ -47,9 +109,12 @@ export async function setStatusAction(formData: FormData) {
 
 /** Assign or unassign a ticket (agents+). Empty value clears the assignee. */
 export async function assignAction(formData: FormData) {
-  const ticketId = String(formData.get("ticketId") ?? "");
-  const assigneeIdRaw = String(formData.get("assigneeId") ?? "");
-  const assigneeId = assigneeIdRaw === "" ? null : assigneeIdRaw;
+  const assigneeIdRaw = formData.get("assigneeId");
+  const { ticketId, assigneeId } = assignTicketSchema.parse({
+    ticketId: formData.get("ticketId"),
+    assigneeId:
+      assigneeIdRaw === null || assigneeIdRaw === "" ? null : assigneeIdRaw,
+  });
 
   await assignTicket({ ticketId, assigneeId });
   revalidatePath(`/admin/tickets/${ticketId}`);

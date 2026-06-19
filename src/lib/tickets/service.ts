@@ -5,11 +5,13 @@ import {
   createTicketSchema,
   addMessageSchema,
   setTicketStatusSchema,
+  requesterSetStatusSchema,
   assignTicketSchema,
   listTicketsSchema,
   type CreateTicketInput,
   type AddMessageInput,
   type SetTicketStatusInput,
+  type RequesterSetStatusInput,
   type AssignTicketInput,
   type ListTicketsInput,
 } from "./schemas";
@@ -23,39 +25,54 @@ import {
  * Intended to be wrapped by Server Actions / Route Handlers in the UI phase.
  */
 
-/** Create a ticket as the current user, with its first message. */
+/**
+ * Create a ticket and its first message atomically (one transaction) via the
+ * create_ticket_with_message RPC. The function is SECURITY INVOKER, so RLS still
+ * scopes the inserts to the caller's tenant and identity.
+ */
 export async function createTicket(input: CreateTicketInput): Promise<Ticket> {
   const data = createTicketSchema.parse(input);
   const db = await getTenantDb();
 
-  const { data: ticket, error } = await db.raw
-    .from("tickets")
-    .insert({
-      tenant_id: db.ctx.tenantId,
-      requester_id: db.ctx.userId,
-      subject: data.subject,
-      priority: data.priority ?? "normal",
-      channel: data.channel ?? "portal",
-    })
-    .select("*")
-    .single();
+  const { data: ticket, error } = await db.raw.rpc(
+    "create_ticket_with_message",
+    {
+      p_subject: data.subject,
+      p_body: data.body,
+      p_priority: data.priority ?? "normal",
+      p_channel: data.channel ?? "portal",
+    },
+  );
 
   if (error || !ticket) {
     throw new Error(`Failed to create ticket: ${error?.message}`);
   }
 
-  const { error: msgError } = await db.raw.from("ticket_messages").insert({
-    tenant_id: db.ctx.tenantId,
-    ticket_id: ticket.id,
-    author_id: db.ctx.userId,
-    author_type: "end_user",
-    body: data.body,
-  });
+  return ticket;
+}
 
-  if (msgError) {
-    throw new Error(`Failed to add first message: ${msgError.message}`);
+/**
+ * Reopen ('open') or close ('closed') a ticket as its requester. Allowed by the
+ * requester-own UPDATE policy and confined to status-only/open-or-closed by the
+ * tickets_protect_immutable trigger.
+ */
+export async function requesterSetTicketStatus(
+  input: RequesterSetStatusInput,
+): Promise<Ticket> {
+  const data = requesterSetStatusSchema.parse(input);
+  const db = await getTenantDb();
+
+  const { data: ticket, error } = await db.raw
+    .from("tickets")
+    .update({ status: data.status })
+    .eq("id", data.ticketId)
+    .eq("tenant_id", db.ctx.tenantId)
+    .select("*")
+    .single();
+
+  if (error || !ticket) {
+    throw new Error(`Failed to update ticket: ${error?.message}`);
   }
-
   return ticket;
 }
 

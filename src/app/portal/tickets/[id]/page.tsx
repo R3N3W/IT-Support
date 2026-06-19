@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getTenantContext } from "@/lib/auth/session";
 import { getTicketWithMessages } from "@/lib/tickets/service";
-import { addMessageAction } from "@/lib/tickets/actions";
+import { ReplyForm } from "@/components/reply-form";
+import { RequesterStatusControl } from "@/components/requester-status-control";
 import { TopBar } from "@/components/top-bar";
 
 export default async function PortalTicketPage({
@@ -24,9 +25,12 @@ export default async function PortalTicketPage({
       <main className="container stack">
         <Link href="/portal">← My tickets</Link>
         <h1>{ticket.subject}</h1>
-        <div className="row">
-          <span className="badge">{ticket.status}</span>
-          <span className="badge">{ticket.priority}</span>
+        <div className="row" style={{ justifyContent: "space-between" }}>
+          <div className="row">
+            <span className="badge">{ticket.status}</span>
+            <span className="badge">{ticket.priority}</span>
+          </div>
+          <RequesterStatusControl ticketId={ticket.id} status={ticket.status} />
         </div>
 
         <section className="stack">
@@ -43,15 +47,7 @@ export default async function PortalTicketPage({
           ))}
         </section>
 
-        <form action={addMessageAction} className="stack">
-          <input type="hidden" name="ticketId" value={ticket.id} />
-          <input type="hidden" name="basePath" value="/portal" />
-          <label htmlFor="body">Reply</label>
-          <textarea id="body" name="body" className="textarea" required />
-          <button className="btn" type="submit">
-            Send reply
-          </button>
-        </form>
+        <ReplyForm ticketId={ticket.id} basePath="/portal" />
       </main>
     </>
   );
