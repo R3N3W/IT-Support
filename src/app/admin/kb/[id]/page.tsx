@@ -7,6 +7,7 @@ import {
   archiveArticleAction,
 } from "@/lib/kb/actions";
 import { EditArticleForm } from "@/components/edit-article-form";
+import { Markdown } from "@/components/markdown";
 import { TopBar } from "@/components/top-bar";
 
 export default async function EditArticlePage({
@@ -45,6 +46,15 @@ export default async function EditArticlePage({
           title={article.title}
           body={article.body}
         />
+
+        {article.body.trim() ? (
+          <section className="stack">
+            <h2 style={{ fontSize: 16, margin: 0 }}>Preview (saved)</h2>
+            <div className="card">
+              <Markdown>{article.body}</Markdown>
+            </div>
+          </section>
+        ) : null}
 
         <div className="row" style={{ gap: "1rem" }}>
           {article.status !== "published" ? (

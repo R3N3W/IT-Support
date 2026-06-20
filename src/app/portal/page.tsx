@@ -16,9 +16,14 @@ export default async function PortalPage() {
       <main className="container stack">
         <div className="row" style={{ justifyContent: "space-between" }}>
           <h1>My tickets</h1>
-          <Link className="btn" href="/portal/new">
-            New ticket
-          </Link>
+          <div className="row">
+            <Link className="btn btn-secondary" href="/portal/kb">
+              Help articles
+            </Link>
+            <Link className="btn" href="/portal/new">
+              New ticket
+            </Link>
+          </div>
         </div>
         {tickets.length === 0 ? (
           <p className="muted">No tickets opened yet.</p>

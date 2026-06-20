@@ -81,7 +81,9 @@ KB isolation + ingestion tests pass live. Admin KB UI (list/create/edit markdown
 publish/draft/archive, ingestion status) and the Vercel Cron worker route
 (`/api/jobs/process`, CRON_SECRET-gated, fail-closed) are shipped and
 browser-verified end to end (create → publish → worker embeds → "1 embedded
-chunk"). **Phase 3 COMPLETE.**
+chunk"). Polish: end-user portal KB (browse + read published articles, markdown
+rendered via react-markdown — no raw HTML), admin KB search + status filter, and
+a saved-markdown preview on the editor. **Phase 3 COMPLETE.**
 
 ---
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTenantContext, hasAtLeastRole } from "@/lib/auth/session";
 import { listArticles } from "@/lib/kb/service";
+import { KbArticleList } from "@/components/kb-article-list";
 import { TopBar } from "@/components/top-bar";
 
 export default async function KbListPage() {
@@ -29,30 +30,7 @@ export default async function KbListPage() {
         {articles.length === 0 ? (
           <p className="muted">No articles yet.</p>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Status</th>
-                <th>Updated</th>
-              </tr>
-            </thead>
-            <tbody>
-              {articles.map((a) => (
-                <tr key={a.id}>
-                  <td>
-                    <Link href={`/admin/kb/${a.id}`}>{a.title}</Link>
-                  </td>
-                  <td>
-                    <span className="badge">{a.status}</span>
-                  </td>
-                  <td className="muted">
-                    {new Date(a.updated_at).toLocaleString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <KbArticleList articles={articles} />
         )}
       </main>
     </>
