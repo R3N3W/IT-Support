@@ -7,13 +7,125 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
+      ai_interactions: {
+        Row: {
+          answer: string | null
+          confidence: number | null
+          created_at: string
+          escalated: boolean
+          escalation_reason:
+            | Database["public"]["Enums"]["escalation_reason"]
+            | null
+          id: string
+          latency_ms: number | null
+          model: string | null
+          question: string
+          retrieved_chunk_ids: string[]
+          tenant_id: string
+          ticket_id: string | null
+          token_usage: Json | null
+        }
+        Insert: {
+          answer?: string | null
+          confidence?: number | null
+          created_at?: string
+          escalated?: boolean
+          escalation_reason?:
+            | Database["public"]["Enums"]["escalation_reason"]
+            | null
+          id?: string
+          latency_ms?: number | null
+          model?: string | null
+          question: string
+          retrieved_chunk_ids?: string[]
+          tenant_id: string
+          ticket_id?: string | null
+          token_usage?: Json | null
+        }
+        Update: {
+          answer?: string | null
+          confidence?: number | null
+          created_at?: string
+          escalated?: boolean
+          escalation_reason?:
+            | Database["public"]["Enums"]["escalation_reason"]
+            | null
+          id?: string
+          latency_ms?: number | null
+          model?: string | null
+          question?: string
+          retrieved_chunk_ids?: string[]
+          tenant_id?: string
+          ticket_id?: string | null
+          token_usage?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_interactions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_interactions_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      escalations: {
+        Row: {
+          ai_confidence: number | null
+          created_at: string
+          id: string
+          reason: Database["public"]["Enums"]["escalation_reason"]
+          resolved_at: string | null
+          tenant_id: string
+          ticket_id: string
+        }
+        Insert: {
+          ai_confidence?: number | null
+          created_at?: string
+          id?: string
+          reason: Database["public"]["Enums"]["escalation_reason"]
+          resolved_at?: string | null
+          tenant_id: string
+          ticket_id: string
+        }
+        Update: {
+          ai_confidence?: number | null
+          created_at?: string
+          id?: string
+          reason?: Database["public"]["Enums"]["escalation_reason"]
+          resolved_at?: string | null
+          tenant_id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escalations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalations_ticket_fk"
+            columns: ["ticket_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id", "tenant_id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           attempts: number
@@ -398,8 +510,22 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      match_kb_chunks: {
+        Args: { match_count?: number; query_embedding: string }
+        Returns: {
+          article_id: string
+          content: string
+          distance: number
+          id: string
+        }[]
+      }
     }
     Enums: {
+      escalation_reason:
+        | "low_confidence"
+        | "no_context"
+        | "user_request"
+        | "policy"
       job_status: "pending" | "running" | "succeeded" | "failed"
       job_type: "embed_article"
       kb_article_status: "draft" | "published" | "archived"
@@ -425,6 +551,9 @@ export type TicketMessage =
 export type KbArticle = Database["public"]["Tables"]["kb_articles"]["Row"]
 export type KbChunk = Database["public"]["Tables"]["kb_chunks"]["Row"]
 export type Job = Database["public"]["Tables"]["jobs"]["Row"]
+export type Escalation = Database["public"]["Tables"]["escalations"]["Row"]
+export type AiInteraction =
+  Database["public"]["Tables"]["ai_interactions"]["Row"]
 
 export type UserRole = Database["public"]["Enums"]["user_role"]
 export type TenantStatus = Database["public"]["Enums"]["tenant_status"]
@@ -438,3 +567,5 @@ export type KbArticleStatus =
 export type KbSource = Database["public"]["Enums"]["kb_source"]
 export type JobType = Database["public"]["Enums"]["job_type"]
 export type JobStatus = Database["public"]["Enums"]["job_status"]
+export type EscalationReason =
+  Database["public"]["Enums"]["escalation_reason"]

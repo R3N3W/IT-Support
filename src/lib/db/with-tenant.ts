@@ -14,7 +14,9 @@ type TenantScopedTable =
   | "ticket_messages"
   | "kb_articles"
   | "kb_chunks"
-  | "jobs";
+  | "jobs"
+  | "escalations"
+  | "ai_interactions";
 
 /**
  * The sanctioned tenant-scoped data-access layer. Every read/write of tenant

@@ -106,6 +106,21 @@ Goal: the core differentiator.
 Exit: a KB-answerable question is answered with citations; an unanswerable one
 escalates to a human ticket.
 
+**Status (2026-06-20): DATA LAYER + PIPELINE COMPLETE & VERIFIED.** escalations +
+ai_interactions tables (force RLS, agents-only read, service-role writes); the
+`match_kb_chunks` SECURITY DEFINER RPC (tenant + published filter, pinned
+search_path, schema-qualified operator, EXECUTE revoked from anon — security-
+reviewed and verified live); pluggable LLM provider (Claude when
+`ANTHROPIC_API_KEY` set, deterministic stub otherwise); RAG + escalation pipeline
+(`answerQuestionWith` core + `answerQuestion` wrapper) with platform-prompt-first
+composition and untrusted-context delimiting; `ai_interactions` logging. All 38
+tests pass (incl. answer-with-citations, user_request/no_context escalation,
+cross-tenant retrieval isolation, agents-only audit reads).
+Tracked follow-ups before exposing to real end-users (security review, advisory):
+citation verification, a retrieval similarity floor, PII scrub/retention on
+ai_interactions, and — when the widget/portal "Ask AI" UI wires up
+`answerQuestion` — role/origin/rate-limiting at that boundary.
+
 ---
 
 ## Phase 5 — Eval harness 🔒
