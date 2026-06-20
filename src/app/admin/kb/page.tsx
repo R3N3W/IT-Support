@@ -1,50 +1,53 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTenantContext, hasAtLeastRole } from "@/lib/auth/session";
-import { listTickets } from "@/lib/tickets/service";
+import { listArticles } from "@/lib/kb/service";
 import { TopBar } from "@/components/top-bar";
 
-export default async function AdminPage() {
+export default async function KbListPage() {
   const ctx = await getTenantContext();
   if (!ctx) redirect("/login");
   if (!hasAtLeastRole(ctx.role, "agent")) redirect("/portal");
 
-  const tickets = await listTickets({ limit: 100, offset: 0 });
+  const articles = await listArticles();
 
   return (
     <>
       <TopBar ctx={ctx} home="/admin" />
       <main className="container stack">
         <div className="row" style={{ justifyContent: "space-between" }}>
-          <h1>Tickets</h1>
-          <Link className="btn btn-secondary" href="/admin/kb">
-            Knowledge base
-          </Link>
+          <h1>Knowledge base</h1>
+          <div className="row">
+            <Link className="btn btn-secondary" href="/admin">
+              Tickets
+            </Link>
+            <Link className="btn" href="/admin/kb/new">
+              New article
+            </Link>
+          </div>
         </div>
-        {tickets.length === 0 ? (
-          <p className="muted">No tickets yet.</p>
+        {articles.length === 0 ? (
+          <p className="muted">No articles yet.</p>
         ) : (
           <table>
             <thead>
               <tr>
-                <th>Subject</th>
+                <th>Title</th>
                 <th>Status</th>
-                <th>Priority</th>
-                <th>Created</th>
+                <th>Updated</th>
               </tr>
             </thead>
             <tbody>
-              {tickets.map((t) => (
-                <tr key={t.id}>
+              {articles.map((a) => (
+                <tr key={a.id}>
                   <td>
-                    <Link href={`/admin/tickets/${t.id}`}>{t.subject}</Link>
+                    <Link href={`/admin/kb/${a.id}`}>{a.title}</Link>
                   </td>
                   <td>
-                    <span className="badge">{t.status}</span>
+                    <span className="badge">{a.status}</span>
                   </td>
-                  <td>{t.priority}</td>
                   <td className="muted">
-                    {new Date(t.created_at).toLocaleString()}
+                    {new Date(a.updated_at).toLocaleString()}
                   </td>
                 </tr>
               ))}

@@ -122,6 +122,18 @@ export async function listArticles(): Promise<KbArticle[]> {
   return data ?? [];
 }
 
+/** Number of embedded chunks for an article (ingestion progress indicator). */
+export async function getArticleChunkCount(articleId: string): Promise<number> {
+  const db = await getTenantDb();
+  const { count, error } = await db.raw
+    .from("kb_chunks")
+    .select("id", { count: "exact", head: true })
+    .eq("tenant_id", db.ctx.tenantId)
+    .eq("article_id", articleId);
+  if (error) throw new Error(`Failed to count chunks: ${error.message}`);
+  return count ?? 0;
+}
+
 export async function getArticle(articleId: string): Promise<KbArticle | null> {
   const db = await getTenantDb();
   const { data } = await db.raw

@@ -77,8 +77,11 @@ Exit: publish an article; chunks + embeddings appear, tenant-scoped.
 `VOYAGE_API_KEY` is set, deterministic stub otherwise); chunk→embed→upsert
 ingestion with `content_hash` dedupe; jobs enqueue + `processDueJobs` worker; KB
 service (CRUD/publish/archive, agents+). Security-reviewed (approved) and all
-KB isolation + ingestion tests pass live. Remaining: admin KB UI and the Vercel
-Cron HTTP route for the worker.
+KB isolation + ingestion tests pass live. Admin KB UI (list/create/edit markdown,
+publish/draft/archive, ingestion status) and the Vercel Cron worker route
+(`/api/jobs/process`, CRON_SECRET-gated, fail-closed) are shipped and
+browser-verified end to end (create → publish → worker embeds → "1 embedded
+chunk"). **Phase 3 COMPLETE.**
 
 ---
 
