@@ -20,6 +20,9 @@ export default async function PortalPage() {
             <Link className="btn btn-secondary" href="/portal/kb">
               Help articles
             </Link>
+            <Link className="btn btn-secondary" href="/portal/ask">
+              Ask AI
+            </Link>
             <Link className="btn" href="/portal/new">
               New ticket
             </Link>

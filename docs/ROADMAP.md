@@ -116,10 +116,14 @@ reviewed and verified live); pluggable LLM provider (Claude when
 composition and untrusted-context delimiting; `ai_interactions` logging. All 38
 tests pass (incl. answer-with-citations, user_request/no_context escalation,
 cross-tenant retrieval isolation, agents-only audit reads).
+UI: end-user portal "Ask AI" page (`/portal/ask`) wires up `answerQuestion`
+behind an authenticated, rate-limited server action; renders the grounded answer
+with source links, or the escalation notice with a ticket link. Browser-verified
+end to end (answer-with-sources + user_request escalation → ticket).
 Tracked follow-ups before exposing to real end-users (security review, advisory):
 citation verification, a retrieval similarity floor, PII scrub/retention on
-ai_interactions, and — when the widget/portal "Ask AI" UI wires up
-`answerQuestion` — role/origin/rate-limiting at that boundary.
+ai_interactions, a durable (shared-store) rate limiter to replace the in-memory
+MVP guardrail, and the embeddable widget surface (with origin allowlisting).
 
 ---
 
